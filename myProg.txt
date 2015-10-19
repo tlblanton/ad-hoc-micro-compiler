@@ -1,0 +1,5 @@
+begin
+ x :=(r+35+(x+2));
+ write(x);
+ y:= 5; --this is a lovely comment that will be ignored
+end EofSym
