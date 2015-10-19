@@ -63,7 +63,6 @@ ExprRec::ExprRec(ExprKind EKind)
 string scanner(int optional)//returns token every time it runs. when non-zero argument is passed, it returns the next token but does
                             //not advance the stream
 {
-    
     static ifstream inFile;
     
     long long pos = 0;
@@ -73,13 +72,12 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
         goBack = true;
         pos = inFile.tellg();
     }
-    
-    
+
     if(!inFile.is_open())
     {
-        inFile.open("testProg.txt"); //opens file if it is not open already. file must be reachable by program (in working directory ideally)
+        inFile.open("myProg.txt"); //opens file if it is not open already. file must be reachable by program (in working directory ideally)
     }
-    
+
     clearBuffer(tokenBuffer);
     char currentChar;
     if(inspect(inFile) == EOF)
