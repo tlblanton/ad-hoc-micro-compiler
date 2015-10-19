@@ -1,7 +1,4 @@
 //
-//  functions.cpp
-//  assignment_2_micro_parser
-//
 //  Created by Tyler Blanton on 8/24/15.
 //  Copyright (c) 2015 tlblanton. All rights reserved.
 //
@@ -20,7 +17,7 @@ using namespace std;
 std::vector<string> symbolTable;
 int maxTemp;
 int maxSymbol; //I am using symbolTable.size() to keep track of how many symbols are in the table currently and maxsymbol to say how many
-//symbols are allowed
+                //symbols are allowed
 int lastSymbol = 0;
 string tokenBuffer;
 
@@ -64,14 +61,14 @@ ExprRec::ExprRec(ExprKind EKind)
  SCANNER
  ********************/
 string scanner(int optional)//returns token every time it runs. when non-zero argument is passed, it returns the next token but does
-//not advance the stream
+                            //not advance the stream
 {
     
-    static ifstream inFile; //static so it retains its open state throughout function calls until EofSym is returned.
+    static ifstream inFile;
     
-    long long pos = 0; //long long because tellg() returns long long
+    long long pos = 0;
     bool goBack = false;
-    if(optional != 0)
+    if(optional != 0) //if optional value is passed, the next token is retrieved without advancing the stream by rewinding to its previous position
     {
         goBack = true;
         pos = inFile.tellg();
@@ -80,7 +77,7 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
     
     if(!inFile.is_open())
     {
-        inFile.open("testProg.txt"); //opens file if it is not open already. file must be reachable by program (in same directory ideally)
+        inFile.open("testProg.txt"); //opens file if it is not open already. file must be reachable by program (in working directory ideally)
     }
     
     clearBuffer(tokenBuffer);
@@ -222,14 +219,12 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
                 return "LexicalError(CurrentChar)"; //returning LexicalError here, as the parser will handle throwing the actual error
             }
         }
-        
         if(goBack)
         {
             inFile.seekg(pos);
         }
         return "EofSym";
     }
-    
 }
 
 void clearBuffer(string& tokenBuffer)
@@ -250,20 +245,24 @@ void bufferChar(char currentChar, string& singleTokenBuffer)
 
 string checkReserved(string id)
 {
-    
-    if(id == "BEGIN" || id == "begin")
+    for(int i = 0; i < id.size(); ++i)
+    {
+        id[i] = toupper(id[i]);
+    }
+
+    if(id == "BEGIN")
     {
         return "BeginSym";
     }
-    else if(id == "END" || id == "end")
+    else if(id == "END")
     {
         return "EndSym";
     }
-    else if(id == "READ" || id == "read")
+    else if(id == "READ")
     {
         return "ReadSym";
     }
-    else if(id == "WRITE" || id == "write")
+    else if(id == "WRITE")
     {
         return "WriteSym";
     }
@@ -302,9 +301,10 @@ void match(string tokenLookingFor)
             legal = true;
         }
     }
-    if(legal == false)
+    if(!legal)
     {
-        cout << "syntaxError(" << currentToken << ")" << endl;
+        cerr << "syntaxError(" << currentToken << ")" << endl;
+        //maybe quit here
     }
 }
 

@@ -8,12 +8,17 @@
 #ifndef _FUNCTIONS_H
 #define _FUNCTIONS_H
 #pragma once
+
+
+
 #include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
 
 //--#globals#--//
+
+
 const int numOfLegalTokens = 14;
 const string legalTokens[numOfLegalTokens] = {"BeginSym" ,"EndSym", "ReadSym", "WriteSym", "Id", "IntLiteral", "LParen", "RParen", "SemiColon", "Comma", "AssignOp", "PlusOp", "MinusOp", "EofSym"};
 
@@ -103,7 +108,7 @@ string getTemp();
 
 //****************************************|Semantic Routines|****************************************
 void start(); //DONE
-void assign(ExprRec target, ExprRec source); 
+void assign(ExprRec target, ExprRec source);
 void readId(ExprRec inVar);
 void writeExpr(ExprRec outExpr);
 ExprRec genInfix(ExprRec e1, OpRec op, ExprRec e2);
