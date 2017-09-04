@@ -90,13 +90,15 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
     }
     else
     {
+        //If we are not at the end of the file, then the next symbol needs to be taken in and interpreted as something that the compiler will understand
         while(inspect(inFile) != EOF)
         {
             currentChar = read(inFile); //read current char
-            if (currentChar == ' ' || currentChar == '\t' || currentChar == '\n')
+            if (currentChar == ' ' || currentChar == '\t' || currentChar == '\n')   //if we find space, we advance past it
             {
                 advance(inFile);
             }
+            //if we find a character then we keep taking in characters to form a whole name
             else if((currentChar >= 'A' && currentChar <= 'Z') || (currentChar  >= 'a' && currentChar <= 'z'))
             {
                 bufferChar(currentChar, tokenBuffer); //put character into tokenBuffer
@@ -114,6 +116,7 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
                     return checkReserved(tokenBuffer); //function that takes identifiers and converts them to tokens
                 }
             }
+            // If we have found a symbol, then we return the name of that symbol, such that the compiler will understand it.
             else if(currentChar >= '0' && currentChar <= '9')
             {
                 bufferChar(currentChar, tokenBuffer);
@@ -189,12 +192,12 @@ string scanner(int optional)//returns token every time it runs. when non-zero ar
                     return "LexicalError(Inspect)"; //returns LexicalError Token if ':' is not followed by '='
                 }
             }
-            else if(currentChar == '-')
+            else if(currentChar == '-') //possibe beginning of comment
             {
-                if(inspect(inFile) == '-')//comments --
+                if(inspect(inFile) == '-')//comments are initiated by "--"
                 {
                     currentChar = read(inFile);
-                    while(inspect(inFile) != '\n')
+                    while(inspect(inFile) != '\n')      //keep reading until end of line to process comment
                     {
                         read(inFile);
                     }
@@ -271,11 +274,13 @@ string checkReserved(string id)
     
 }
 
+// Moves our file reader ahead on char
 void advance(ifstream& inFile)
 {
     inFile.ignore(0);
 }
 
+// Reads next char in file
 char read(ifstream& inFile)
 {
     return inFile.get();
@@ -306,6 +311,10 @@ void match(string tokenLookingFor)
     }
 }
 
+/**********************
+ * SYSTEMGOAL
+ * this is the only function called by main. It initiaes the compilation process.
+ *********************/
 void systemGoal()
 {
     cout << endl << "**|function call|** \t\t **|Code generated|**" << endl << endl;
@@ -315,6 +324,12 @@ void systemGoal()
     finish();
 }
 
+
+/**************
+ * PROGRAM
+ * calls Start() which initializes compiler, checks for presence of proper beginning symbol, and then proceeds toread in entire list of statements in 
+ * user-created program.
+ *************/
 void program()
 {
     cout << "call program" << endl;
@@ -324,6 +339,10 @@ void program()
     match("EndSym");
 }
 
+/**************
+ * STATMENTLIST
+ * Processes a single statement, and if a look-ahead sees another statement, then the function calls itseld recursively
+ *************/
 void statementList()
 {
     cout << "call statementList" << endl;
@@ -339,6 +358,12 @@ void statementList()
     }
 }
 
+/**************
+ * STATEMENT
+ * Interprets a statement as a series of tokens.
+ * In the case that there are nestings (meaning a "(" has been found), this function calls others to recognize the list of
+ * IDs or expressions that are inside of it.
+ *************/
 void statement()
 {
     cout << "call statement" << endl;
@@ -358,7 +383,7 @@ void statement()
     {
         match("ReadSym");
         match("LParen");
-        idList();
+        idList();       //if we have found a "(" after a READ symbol then what follows has to be a list of identifiers
         match("RParen");
         match("Semicolon");
     }
@@ -366,16 +391,20 @@ void statement()
     {
         match("WriteSym");
         match("LParen");
-        exprList();
+        exprList();         //if we have found a "(" after a WRITE symbol then what follows has to be a list of expressions
         match("RParen");
         match("SemiColon");
     }
     else
     {
-        cout << "SyntaxError(" << nextToken << ")" << endl;
+        cout << "SyntaxError(" << nextToken << ")" << endl; //displaying where a syntax error was found in the file
     }
 }
 
+/***********
+ * IDLIST
+ * processes a list of comma-separated identifiers, calling to itself recursively as is necessary
+ **********/
 void idList()
 {
     cout << "call idList" << endl;
@@ -393,6 +422,12 @@ void idList()
         return;
     }
 }
+
+
+/***************
+ * EXPRLIST
+ * processes a list of expressions
+ **************/
 
 void exprList()
 {
@@ -412,6 +447,11 @@ void exprList()
     }
 }
 
+
+/****************
+ * EXPRESSION
+ * interprets a single expressions (addition, subtraction)
+ ***************/
 void expression(ExprRec& result)
 {
     cout << "call expression" << endl;
@@ -432,6 +472,10 @@ void expression(ExprRec& result)
     }
 }
 
+/****************
+ * PRIMARY
+ * interprets primary expressions
+ ***************/
 void primary(ExprRec& result)
 {
     cout << "call primary" << endl;
@@ -457,6 +501,10 @@ void primary(ExprRec& result)
     }
 }
 
+/****************
+ * IDENT
+ * looks ahead for appropriate next operator given a current operator
+ ***************/
 void ident(ExprRec& result)
 {
     cout << "call ident" << endl;
@@ -464,6 +512,11 @@ void ident(ExprRec& result)
     processId(result); //processId changed to pass-by-reference so that the value of result could be changed
 }
 
+
+/****************
+ * ADDOP
+ * handles the case in which the progrma comes across a "+" or "-"
+ ***************/
 void addOp(OpRec op)
 {
     cout << "call addOp" << endl;
@@ -484,7 +537,10 @@ void addOp(OpRec op)
     }
 }
 
-
+/****************
+ * GETNEXTTOKEN
+ * Retrieve written programs next token
+ ***************/
 string getNextToken()
 {
     return scanner(1); //scanner called with any non-zero argument returns next token but does not advance the stream
@@ -494,6 +550,10 @@ string getNextToken()
 /*************************************************************************************************************************
  AUXILARY ROUTINES
  ************************************************************************************************************************/
+/****************
+ * GENERATE
+ * Writes out the compiled text for the user to see.
+ ***************/
 void generate(string s1, string s2, string s3, string s4)
 {
     
@@ -519,6 +579,10 @@ void generate(string s1, string s2, string s3, string s4)
     }
 }
 
+/****************
+ * EXTRACT
+ * returns type of expression that is being handled
+ ***************/
 string extract(ExprRec E)
 {
     if(E.getKind() == IdExpr || E.getKind() ==  TempExpr)
@@ -534,6 +598,10 @@ string extract(ExprRec E)
 }
 
 
+/****************
+ * EXTRACTOP
+ * returns type of operator that is being handled
+ ***************/
 string extractOp(OpRec o)
 {
     if(o.getOp() == PlusOp)
@@ -547,7 +615,10 @@ string extractOp(OpRec o)
     return "ADD ";
 }
 
-
+/****************
+ * LOOKUP
+ * checks if argument string is present in the symbol table
+ ***************/
 bool lookUp(string s)
 {
     bool up = false;
@@ -561,6 +632,10 @@ bool lookUp(string s)
     return up;
 }
 
+/****************
+ * ENTER
+ * puts new string onto symbol table
+ ***************/
 void enter(string s)
 {
     if(lastSymbol < maxSymbol)
@@ -574,6 +649,10 @@ void enter(string s)
     }
 }
 
+/****************
+ * CHECKID
+ * if we are not at the end of the file, checka string's Id and generate a statement that declares it
+ ***************/
 void checkId(string s)
 {
     if(!lookUp(s) && s != "end")
@@ -583,6 +662,10 @@ void checkId(string s)
     }
 }
 
+/****************
+ * GETTEMP
+ * Generates a temporary variable as a placeholder for when we have intermediary values as a result of computation (add, sub, mul, div)
+ ***************/
 string getTemp()
 {
     maxTemp++;
@@ -601,6 +684,10 @@ string getTemp()
  ************************************************************************************************************************/
 
 
+/****************
+ * START
+ * initializes compiler
+ ***************/
 void start()
 {
     cout << "call start" << endl;
@@ -608,23 +695,38 @@ void start()
     maxTemp = 0;
 }
 
-
+/****************
+ * ASSIGN
+ * Stores target's value in source and displays that
+ ***************/
 void assign(ExprRec target, ExprRec source) //IN
 {
     cout << "call assign" << endl;
     generate("Store", extract(source), target.getName());
 }
 
+/****************
+ * READID
+ * prints what is being read
+ ***************/
 void readId(ExprRec inVar)
 {
     generate("Read", inVar.getName(), "Integer");
 }
 
+/****************
+ * WRITEID
+ * prints what is being written
+ ***************/
 void writeExpr(ExprRec outExpr)
 {
     generate("Write", extract(outExpr), "Integer");
 }
 
+/****************
+ * EXPRREC
+ * prints intermediary calculation for user to see what is being done
+ ***************/
 ExprRec genInfix(ExprRec e1, OpRec oper, ExprRec e2)
 {
     ExprRec ERec(TempExpr);
@@ -633,7 +735,10 @@ ExprRec genInfix(ExprRec e1, OpRec oper, ExprRec e2)
     return ERec;
 }
 
-
+/****************
+ * PROCESSID
+ * checks a token's ID
+ ***************/
 void processId(ExprRec& e)
 {
     cout << "call processId" << endl;
@@ -642,12 +747,20 @@ void processId(ExprRec& e)
     e.setName(tokenBuffer);
 }
 
+/****************
+ * PROCESSLITERAL
+ * if there is a literal in the code, make sure it's proper value is associated with it.
+ ***************/
 void processLiteral(ExprRec& e)
 {
     e.setKind(LiteralExpr);
     e.setVal(stoi(tokenBuffer));
 }
 
+/****************
+ * PROCESSOP
+ * Generate "+" or "_" based on "PlusOp" or "MinusOp"
+ ***************/
 void processOp(OpRec& oper)
 {
     if(tokenBuffer == "PlusOp")
@@ -660,6 +773,10 @@ void processOp(OpRec& oper)
     }
 }
 
+/****************
+ * FINISH
+ * complete compilation process, print HALT message
+ ***************/
 void finish()
 {
     cout << "call finish" << endl;
@@ -667,7 +784,10 @@ void finish()
     cout << endl;
 }
 
-
+/****************
+ * WRITE
+ * function that prints its arguments
+ ***************/
 void write(string s1, string s2, string s3, string s4)
 {
     static ofstream outFile("output.txt");
